@@ -2,6 +2,7 @@
 description: Reviews code for correctness, security, regressions, and missing tests without modifying files
 mode: subagent
 temperature: 0.1
+steps: 20
 permission:
   read: allow
   grep: allow

@@ -2,6 +2,7 @@
 description: Runs project test suites and reports results — does not modify code
 mode: subagent
 temperature: 0.1
+steps: 12
 permission:
   read: allow
   grep: allow
