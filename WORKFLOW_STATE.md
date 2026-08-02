@@ -17,12 +17,24 @@
 
 ## PLAN
 <PLAN>
-  *Scope:* ...
+  *Phase:* IMPLEMENTATION — write verified recommendations + safe-adoption playbook into AGENTS.md and a project doc. Research rounds 1-2 + safe-integration research all DONE.
+
+  *Scope:*
+  1. Safe-integration research (how to adopt @playwright/cli, @playwright/mcp, skills, extensions WITHOUT breaking opencode config) — DONE (verified: bad MCP entry / malformed JSON crashes opencode; exact @playwright/mcp opencode config; skills CLI `-a opencode` support)
+  2. Write compact "Browser Automation & AI Browser Tooling" section into AGENTS.md (always-loaded) + extend Gap Analysis instructions-file check
+  3. Write docs/browser-automation-efficiency.md (deep playbook: recommendations, safe-adoption rules, tool playbooks, verification table, adoption checklist)
+  4. Review gate (@reviewer) then close
 
   *Acceptance Criteria:*
-  1. ...
+  1. AGENTS.md section + doc written following hybrid-format convention (## + XML tags)
+  2. Doc does NOT get added to opencode.json `instructions` (context bloat) — AGENTS.md pointer suffices; decision documented
+  3. opencode.json itself unchanged/valid; no MCP enabled by default (opt-in documented)
+  4. @reviewer passes the changes
 
-  *Implementation Plan:* ...
+  *Implementation Plan:*
+  1. Register TASK-013 (done) / TASK-014 (write, orchestrator) / TASK-015 (review)
+  2. Write AGENTS.md section + doc
+  3. Dispatch @reviewer; integrate findings; close
 </PLAN>
 
 ## TASKS
@@ -94,7 +106,21 @@
 
   | ID | Title | State | Assigned | Pri | Parallel | Depends | Accuracy |
   |---|---|---|---|---|---|---|---|
-  | TASK-001 | ... | backlog | @general | 0 | TASK-002 | — | low |
+  | TASK-001 | Scanner/installer script for token-optimization stack | done | @general | 0 | — | — | medium |
+  | TASK-002 | Generic docs with decision rules + caveats | done | @general | 1 | — | TASK-001 | medium |
+  | TASK-003 | README pointer + WORKFLOW_STATE tracking | done | @general | 2 | — | TASK-002 | low |
+  | TASK-004 | Verification (syntax, dry-run, idempotent apply, index smoke) | done | @general | 0 | — | TASK-003 | medium |
+  | TASK-005 | Research: Playwright/browser-automation efficiency best practices | done | @general | 0 | TASK-006, TASK-007 | — | medium |
+  | TASK-006 | Research: third-party AI browsers & automation infra | done | @general | 0 | TASK-005, TASK-007 | — | medium |
+  | TASK-007 | Research: Chrome Extensions for automation | done | @general | 0 | TASK-005, TASK-006 | — | medium |
+  | TASK-008 | Synthesize findings into user-facing report | done | @orchestrator | 0 | — | TASK-005, TASK-006, TASK-007 | medium |
+  | TASK-009 | Research: Playwright CLI (@playwright/cli) token-efficient automation | done | @general | 0 | TASK-010, TASK-011 | — | medium |
+  | TASK-010 | Research: token-efficient AI browsers (Tappi, Agent Browser) + efficiency mechanisms | done | @general | 0 | TASK-009, TASK-011 | — | medium |
+  | TASK-011 | Research: Chrome extensions round 2 (Playwright Extension, CRX, Playwriter) | done | @general | 0 | TASK-009, TASK-010 | — | medium |
+  | TASK-012 | Synthesize round-2 findings into user-facing report | done | @orchestrator | 0 | — | TASK-009, TASK-010, TASK-011 | medium |
+  | TASK-013 | Research safe opencode integration (MCP config, skills, crash rules) | done | @general | 0 | — | TASK-012 | high |
+  | TASK-014 | Write AGENTS.md section + docs/browser-automation-efficiency.md | done | @orchestrator | 0 | — | TASK-013 | medium |
+  | TASK-015 | Review gate: AGENTS.md section + doc | done | @reviewer | 0 | — | TASK-014 | medium |
 </TASKS>
 
 ## RUN_LOG
@@ -148,7 +174,17 @@
 
   | Run | Task | Agent | State | Tokens (in/out) | Cost | Result |
   |---|---|---|---|---|---|---|
-  | TASK-001-1 | TASK-001 | @general | running | 0/0 | $0.00 | — |
+  | TASK-001-1 | TASK-001 | @general | completed | 0/0 | $0.00 | scanner+installer built; fixed bash-3.2 (no assoc arrays), set -e traps, SIGPIPE, JSONC strip |
+  | TASK-005-1 | TASK-005 | @general | completed | 0/0 | $0.00 | research complete: 8 domains covered, 10 ranked recommendations (parallelism, resource blocking, storageState, auto-wait, artifacts-on-retry) |
+  | TASK-006-1 | TASK-006 | @general | completed | 0/0 | $0.00 | research complete: cloud browsers, AI agents (browser-use/Stagehand/Skyvern), stealth (Camoufox/rebrowser), scraping APIs + decision guide |
+  | TASK-007-1 | TASK-007 | @general | completed | 0/0 | $0.00 | research complete: persistent-context loading, uBlock, MV3 custom extension snippet, caveats |
+  | TASK-009-1 | TASK-009 | @general | completed | 0/0 | $0.00 | research complete: official CLI confirmed; 26K-vs-114K token claim UNVERIFIED; disk-based a11y snapshots + daemon + skills verified |
+  | TASK-010-1 | TASK-010 | @general | completed | 0/0 | $0.00 | research complete: Tappi unverifiable (article deleted, no package); Agent Browser verified; a11y-tree/action-cache/schema-limits mechanisms validated |
+  | TASK-011-1 | TASK-011 | @general | completed | 0/0 | $0.00 | research complete: Playwright Extension (official, MS), CRX (third-party), Playwriter (broadest permissions) all verified w/ security notes |
+  | TASK-013-1 | TASK-013 | @general | completed | 0/0 | $0.00 | safe-integration research: verified @playwright/mcp opencode config, JSONC/MCP crash rules (issues #33845/#35954), skills CLI -a opencode, tool-collision & permission gotchas |
+  | TASK-014-1 | TASK-014 | @orchestrator | completed | 0/0 | $0.00 | wrote AGENTS.md section + docs/browser-automation-efficiency.md; applied all 5 reviewer fixes; gap check re-verified PASS |
+  | TASK-016-1 | TASK-016 | @orchestrator | completed | 0/0 | $0.00 | machine adoption: `npm install -g @playwright/cli@0.1.17` (pinned) + `install --skills` → .claude/skills/playwright-cli (project-scoped, opencode-discovered) + `install-browser chromium` (headless shell v1232); smoke test OK (daemon + a11y snapshot as file link); .gitignore updated for .claude/ + .playwright-cli/ |
+  | RQ-ORCA-1 | RQ-ORCA | @general | completed | 0/0 | $0.00 | OrcaRouter verification (user query): real LLM routing gateway (LiteLLM/OpenRouter class, SaaS + MIT self-hosted Lite). Cuts COST, not tokens. 75.5% accuracy arXiv-backed (arXiv:2605.30736, self-submitted, paper says ranked 2nd on RouterArena — homepage omits). "40% lower cost"/"-90% cache" = unverified marketing. Verdict: NOT a token-savings measure; do not add to doc unless a cost-savings section is created (cite only arXiv claim; benchmark before quoting figures). |
 </RUN_LOG>
 
 ## HANDOFFS
@@ -201,15 +237,24 @@
   | ID | Ver | From | To | Status | Parent | Original |
   |---|---|---|---|---|---|---|
   | HND-001 | 1 | orchestrator | explore | completed | — | HND-001 |
+  | HND-002 | 1 | orchestrator | general | completed | — | HND-002 |
+  | HND-003 | 1 | orchestrator | general | completed | — | HND-003 |
+  | HND-004 | 1 | orchestrator | general | completed | — | HND-004 |
+  | HND-005 | 1 | orchestrator | reviewer | completed | — | HND-005 |
 </HANDOFFS>
 
 ## REVIEW
 <REVIEW>
-  *PASS or list of findings with severity (critical / major / minor).*
+  *Browser-automation deliverables — reviewer verdict: CONCERNS (no criticals, 1 major + 4 minor). All resolved & re-verified:*
 
-  | Finding | Severity | File | Description |
-  |---|---|---|---|
-  | ... | major | src/foo.ts | Off-by-one in loop boundary |
+  | Finding (from @reviewer) | Severity | Resolution |
+  |---|---|---|
+  | Gap Analysis instructions-files check used bare `browser-automation-efficiency.md` (file lives in `docs/`) → check could never pass | major | Added `docs/` prefix; check re-run → PASS |
+  | AGENTS.md MCP example used `@playwright/mcp@latest` while rule 6 + doc mandate pinning | minor | Example now `@playwright/mcp@<pinned>` with pointer to doc §2.2; doc snippet uses `<pinned-version>` placeholder (no unverified version cited) |
+  | Crash issue attribution lumped (#33845+#35954 for both causes) | minor | Matched doc attribution: #35954 = malformed JSON, #33845 = bad MCP entry |
+  | `@playwright/cli` "Apache-2.0" license claim not in verification table | minor | Added license to verified row in Part 5 table (npm metadata) |
+  | "unknown frontmatter fields are ignored" behavioral claim unverified | minor | Hedged: "ignored by current opencode versions — re-verify after upgrades" |
+  | Hybrid-format compliance, config-safety rules, factual verification split, security guidance | PASS (no change) | — |
 </REVIEW>
 
 ## TESTS
@@ -224,5 +269,13 @@
 
 ## STATUS
 <STATUS>
-  *Current phase: planned | in-progress | review | done*
+  *Current phase: done — browser-automation efficiency research + adoption docs complete (TASK-005..016 closed).
+  Rounds 1-2 research verified; recommendations + safe-adoption rules written into AGENTS.md (always-loaded) and
+  docs/browser-automation-efficiency.md (playbook, verification table, checklist); reviewer findings all resolved;
+  gap check passes; opencode.json untouched/valid. THIS machine adopted @playwright/cli@0.1.17 (pinned, global) +
+  skill + chromium headless shell v1232; smoke test OK. Next machine: gap analysis + Part 6 checklist.*
+  Advisory (2026-08-03): OrcaRouter evaluated against docs/token-optimization.md ("token savings measures").
+  Verdict: NOT a token-saving layer (cuts cost-per-token, not token count; savings figures unverified marketing —
+  violates the doc's own Honest Caveats rule). At most a one-line caveat beside the existing "cheap models"
+  provider lever, if cost optimization is wanted. No doc changes made. See RUN_LOG RQ-ORCA-1.*
 </STATUS>
