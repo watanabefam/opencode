@@ -1,7 +1,10 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "default_agent": "orchestrator",
-  "instructions": ["AGENTS.md", "hybrid-format-convention.md", "workspace-convention.md"],
+  "default_agent": "build",
+  "instructions": [
+    "AGENTS.md",
+    "workspace-convention.md"
+  ],
   "permission": {
     "edit": "ask",
     "bash": "ask"

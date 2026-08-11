@@ -42,6 +42,33 @@
 
 ---
 
+## Token Optimization Pipeline
+
+<TOKEN_OPTIMIZATION>
+  Cut token spend in OpenCode on **any** machine with a scan-first setup
+  pipeline. The script detects the machine (OS, arch, RAM, disk, tools,
+  agents, LLM provider) and applies only the layers that machine can support —
+  nothing is hardcoded to a specific host.
+
+  ```
+  # 1. Scan + see what this machine supports (no changes):
+  ./scripts/setup-token-stack.sh --projects ~/code
+
+  # 2. Apply the suitable layers (idempotent, backs up config first):
+  ./scripts/setup-token-stack.sh --apply
+
+  # 3. Index the repos you actually work on:
+  ./scripts/setup-token-stack.sh --index ~/code/app ~/code/lib
+  ```
+
+  Layers: built-in compaction (always) → Codebase Memory MCP + rtk (Tier 1,
+  what `--apply` installs) → Token Optimizer MCP (Tier 2, manual, RAM >= 16 GB
+  only) → caveman/Context7 (Tier 3, manual, optional).
+  Full decision rules and honest caveats: `docs/token-optimization.md`.
+</TOKEN_OPTIMIZATION>
+
+---
+
 ## Key Concepts
 
 <KEY_CONCEPTS>

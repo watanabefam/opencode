@@ -121,6 +121,9 @@
   | TASK-013 | Research safe opencode integration (MCP config, skills, crash rules) | done | @general | 0 | — | TASK-012 | high |
   | TASK-014 | Write AGENTS.md section + docs/browser-automation-efficiency.md | done | @orchestrator | 0 | — | TASK-013 | medium |
   | TASK-015 | Review gate: AGENTS.md section + doc | done | @reviewer | 0 | — | TASK-014 | medium |
+  | TASK-016 | Machine adoption: install @playwright/cli (pinned) + skill + browser | done | @orchestrator | 0 | — | TASK-014 | medium |
+  | TASK-017 | Token benchmark: CLI vs MCP on this machine | done | @orchestrator | 0 | — | TASK-016 | medium |
+  | TASK-018 | Fix scout subagent: create global scout.md + correct 'built-in' doc claims | done | @orchestrator | 0 | — | — | medium |
 </TASKS>
 
 ## RUN_LOG
@@ -184,7 +187,9 @@
   | TASK-013-1 | TASK-013 | @general | completed | 0/0 | $0.00 | safe-integration research: verified @playwright/mcp opencode config, JSONC/MCP crash rules (issues #33845/#35954), skills CLI -a opencode, tool-collision & permission gotchas |
   | TASK-014-1 | TASK-014 | @orchestrator | completed | 0/0 | $0.00 | wrote AGENTS.md section + docs/browser-automation-efficiency.md; applied all 5 reviewer fixes; gap check re-verified PASS |
   | TASK-016-1 | TASK-016 | @orchestrator | completed | 0/0 | $0.00 | machine adoption: `npm install -g @playwright/cli@0.1.17` (pinned) + `install --skills` → .claude/skills/playwright-cli (project-scoped, opencode-discovered) + `install-browser chromium` (headless shell v1232); smoke test OK (daemon + a11y snapshot as file link); .gitignore updated for .claude/ + .playwright-cli/ |
+  | TASK-017-1 | TASK-017 | @orchestrator | completed | 0/0 | $0.00 | benchmark (example.com, this machine): CLI open stdout 267 B (~66 tok), snapshot file 315 B (~78 tok), eval output 336 B (~84 tok); MCP inline snapshot NOT measurable (live profile-lock between the two playwright MCP servers — confirms --isolated advice); MCP est ~= a11y content size, scales with page. Method: bytes/4 heuristic. Does NOT validate the 26K/114K claim — validates mechanism (file-link vs inline tree). Committed ea57ca3. |
   | RQ-ORCA-1 | RQ-ORCA | @general | completed | 0/0 | $0.00 | OrcaRouter verification (user query): real LLM routing gateway (LiteLLM/OpenRouter class, SaaS + MIT self-hosted Lite). Cuts COST, not tokens. 75.5% accuracy arXiv-backed (arXiv:2605.30736, self-submitted, paper says ranked 2nd on RouterArena — homepage omits). "40% lower cost"/"-90% cache" = unverified marketing. Verdict: NOT a token-savings measure; do not add to doc unless a cost-savings section is created (cite only arXiv claim; benchmark before quoting figures). |
+  | TASK-018-1 | TASK-018 | @orchestrator | completed | 0/0 | $0.00 | root cause: scout is NOT an opencode built-in (@opencode-ai/cli 1.17.8 ships build/plan/general/explore + hidden compaction/title/summary; live agent_list shows no scout) and no scout.md existed in any agent dir → orchestrator task-dispatch of @scout fails in every project that attempts it ("some projects" = projects whose orchestrator actually tried external-dependency research). Fix: created ~/.config/opencode/agents/scout.md (mode: subagent; read/grep/glob + webfetch/websearch allow; write/edit/task deny; bash scoped to git clone/-C/ls-remote + npm view/info/pack + curl/wget; clones restricted to managed cache) so it applies globally (agent discovery: project .opencode/agents/ → ~/.config/opencode/agents/; no project overrides scout). Corrected the false "Built-in (available without config)" claim in 3 orchestrator.md files (global, opencode, n8n) — scout moved under Custom subagents with accurate permissions. All orchestrator task allowlists already had "scout": allow, so no per-project config change needed. Live-server registration unverified this session: `opencode web` (PID 1315, port 4096) saturated at ~80% CPU (browser-automation load) → MCP agent_list + HTTP both time out. Verify after server restarts / next session: scout should appear in agent list and task tool. |
 </RUN_LOG>
 
 ## HANDOFFS
@@ -270,12 +275,26 @@
 ## STATUS
 <STATUS>
   *Current phase: done — browser-automation efficiency research + adoption docs complete (TASK-005..016 closed).
+  Scout fix (TASK-018, DONE): created global ~/.config/opencode/agents/scout.md + corrected false "built-in" claims in
+  orchestrator.md (global + opencode + n8n). OPEN ITEM: confirm scout registers on the running server after restart —
+  `opencode web` (PID 1315) was saturated (~80% CPU) so live agent_list verification timed out; scout should appear in
+  `opencode_agent_list` / the task tool in the next session in every project.
   Rounds 1-2 research verified; recommendations + safe-adoption rules written into AGENTS.md (always-loaded) and
   docs/browser-automation-efficiency.md (playbook, verification table, checklist); reviewer findings all resolved;
-  gap check passes; opencode.json untouched/valid. THIS machine adopted @playwright/cli@0.1.17 (pinned, global) +
-  skill + chromium headless shell v1232; smoke test OK. Next machine: gap analysis + Part 6 checklist.*
+  gap check passes; opencode.json untouched/valid. THIS machine adopted @playwright/cli 0.1.17 (current @latest at install;
+  policy = track, don't freeze — keep current, record versions, smoke-test after upgrades, per doc §2.6) + skill +
+  chromium headless shell v1232; smoke test OK. Committed ea57ca3 (AGENTS.md, docs/browser-automation-efficiency.md,
+  .gitignore, WORKFLOW_STATE.md). Token benchmark recorded (TASK-017): CLI immediate context ~66 tok/task on example.com
+  vs MCP returning the a11y tree inline (unmeasured this session — live profile-lock between the two playwright MCP servers
+  confirms the --isolated advice; does NOT validate the 26K/114K marketing claim). Uncommitted leftovers: README.md +
+  .DS_Store (pre-existing), scripts/ + docs/token-optimization.md (prior task). Next machine: gap analysis + Part 6 checklist.*
   Advisory (2026-08-03): OrcaRouter evaluated against docs/token-optimization.md ("token savings measures").
   Verdict: NOT a token-saving layer (cuts cost-per-token, not token count; savings figures unverified marketing —
-  violates the doc's own Honest Caveats rule). At most a one-line caveat beside the existing "cheap models"
-  provider lever, if cost optimization is wanted. No doc changes made. See RUN_LOG RQ-ORCA-1.*
+  violates the doc's own Honest Caveats rule). Added one-line caveat (routing gateways) beside the existing
+  "cheap models" provider lever. See RUN_LOG RQ-ORCA-1.*
+  Config change (2026-08-03): global opencode.jsonc `playwright` MCP server switched `--user-data-dir=<shared profile>` →
+  `--isolated` (temp profile) to fix the persistent-profile lock between the two playwright servers (TASK-017 finding).
+  Backup: ~/.config/opencode/opencode.jsonc.bak.20260803064906. JSONC validated. Takes effect on next opencode restart;
+  current session's playwright servers still run old config. `playwright-tabbed` unchanged (no --isolated support; keeps
+  persistent profile). Optional follow-up: pin @playwright/mcp version.
 </STATUS>

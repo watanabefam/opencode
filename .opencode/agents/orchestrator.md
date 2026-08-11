@@ -73,11 +73,13 @@ After all implementations complete, dispatch in a single response:
   Fast, cannot modify files. Use for upfront codebase mapping.
 - **@general** — full tool access (except todowrite). Use for implementation
   work that doesn't fit a specialist agent.
+
+### Custom subagents (defined in agent dirs: project `.opencode/agents/` → `~/.config/opencode/agents/`)
+
 - **@scout** — read-only external docs and dependency research. Clones
-  dependency repos into managed cache. Cannot modify workspace.
-
-### Custom subagents
-
+  dependency repos into a managed cache. Cannot modify workspace.
+  Permission: edit=deny, write=deny, task=deny, bash=scoped (git clone /
+  git ls-remote / npm view / curl), webfetch+websearch allow.
 - **@reviewer** — read-only code review. Inspects diffs for correctness,
   security, regressions, missing tests. Files findings in
   WORKFLOW_STATE.md's REVIEW section. Permission: edit=deny, bash=deny,

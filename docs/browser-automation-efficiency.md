@@ -27,7 +27,7 @@
    - Auth reuse: `storageState` + setup project (or per-worker fixture) to skip login UI every test/worker.
    - Artifacts on retry only: `trace/video: 'on-first-retry'` (suite-wide `trace: 'on'` is "very performance heavy" per docs).
    - Semantic locators (`getByRole`/`getByTestId`) over CSS/XPath; never `waitForTimeout` — auto-wait + tuned `expect.timeout`/`actionTimeout`.
-2. **AI-agent token efficiency → `@playwright/cli`** (npm `@playwright/cli`, official Microsoft, Apache-2.0, experimental pre-1.0 — **pin versions**; bundles Playwright alpha builds). Efficiency design is real and verified: disk-based a11y-tree snapshots (`.playwright-cli/page-*.yml`, ref-based interaction, `--output-max-size` evicts to disk), warm daemon (no per-command startup), accessibility-tree output instead of screenshots, `playwright-cli install --skills`. Reserve Playwright MCP for persistent/agentic loops.
+2. **AI-agent token efficiency → `@playwright/cli`** (npm `@playwright/cli`, official Microsoft, Apache-2.0, experimental pre-1.0; bundles Playwright alpha builds — keep current, track versions, don't freeze; see §2.6). Efficiency design is real and verified: disk-based a11y-tree snapshots (`.playwright-cli/page-*.yml`, ref-based interaction, `--output-max-size` evicts to disk), warm daemon (no per-command startup), accessibility-tree output instead of screenshots, `playwright-cli install --skills`. Reserve Playwright MCP for persistent/agentic loops.
 3. **Driving the user's real logged-in browser** (SSO/2FA, LMS, Google Workspace) — use the official **Playwright Extension** (Microsoft-published, MV3): `@playwright/mcp --extension` or `playwright-cli attach --extension`, gated by `PLAYWRIGHT_MCP_EXTENSION_TOKEN`. Reuses real cookies/profiles — no re-authentication.
 4. **Token-efficiency mechanisms for agent tooling** (verified across Stagehand/browser-use/Skyvern/Agent Browser): a11y-tree/ASCII-wireframe page views with indexed interactive elements, constrained action schemas, action caching/self-healing, hard step limits. See Part 4.
 5. **Escalation options when baseline isn't enough:**
@@ -35,6 +35,16 @@
    - AI agents: browser-use (OSS; Cloud metered ~$0.006/step), Stagehand (Playwright + LLM hybrid, TypeScript), Skyvern (Playwright extension, vision-based, AGPL-3.0).
    - Anti-detection: Camoufox (engine-level, strongest free; ~1yr maintenance gap — verify), rebrowser-patches (CDP leak fix), playwright-extra/stealth (easy, weaker).
    - Volume scraping: Zenrows / ScrapingBee / ScraperAPI / Bright Data Web Unlocker (cheapest per-1k for simple pages; Web Unlocker must NOT be driven by Playwright — use their Scraping Browser instead).
+
+### Default tool-selection policy
+<DEFAULT_TOOL_SELECTION>
+
+1. **Default: `@playwright/cli`.** Token-efficient (measured on the originating machine: ~66 tokens immediate context on example.com vs MCP returning the a11y tree inline — see WORKFLOW_STATE.md TASK-017), disk-based state, warm daemon, zero config-crash surface, skills auto-discovered. Use it first for any agent-driven browser automation.
+2. **Fall back to Playwright MCP** when the task shape demands it (not just on CLI failure): persistent agentic loop with in-context state; vision/screenshot-driven decisions; self-healing/exploratory iteration; CLI errors or missing feature. Before relying on MCP, resolve the known persistent-profile lock between concurrent Playwright servers with `--isolated` (or distinct `--user-data-dir`) — see Part 2.2.
+3. **Fall back to headed / UI Mode** only for interactive debugging and visual verification (Playwright UI Mode, trace viewer, `--headed`).
+4. If the CLI misbehaves: try `playwright-cli --help` / self-discovery first, then verify the installed version (`playwright-cli --version`); switch tools only after that.
+
+</DEFAULT_TOOL_SELECTION>
 
 </PART1>
 
@@ -62,7 +72,7 @@
   "mcp": {
     "pw-browser": {                      // unique name — avoids `playwright_*` tool-prefix collisions
       "type": "local",
-      "command": ["npx", "-y", "@playwright/mcp@<pinned-version>", "--isolated"],  // pin a real released version (npm view @playwright/mcp versions); -y = no non-TTY prompt; --isolated = no profile lock
+      "command": ["npx", "-y", "@playwright/mcp@latest", "--isolated"],  // keep current (track, don't freeze — see §2.6); -y = no non-TTY prompt; --isolated = no profile lock
       "enabled": false                   // opt-in: keep false unless the user wants it on every session
     }
   }
@@ -105,6 +115,19 @@ Rules that apply to ANY MCP entry:
 
 </EXTENSION_SECURITY>
 
+### 2.6 Version management (track, don't freeze)
+<VERSION_MANAGEMENT>
+
+- **Keep experimental tools on `@latest`.** Freezing (pinning) trades freshness for reproducibility — the wrong trade for pre-1.0 tools that ship fixes and features continuously (and bundle Playwright alpha builds). A pinned browser tool ages into browser-engine mismatches (e.g., the CLI needing its own headless-shell revision).
+- **Make upgrades deliberate and observable instead of freezing them:**
+  1. **Record the running version** after any upgrade (or when behavior changes): `playwright-cli --version`; for MCP servers, note the resolved npx version from server logs. Log it in WORKFLOW_STATE.md.
+  2. **Smoke-test after upgrades**: the 10-second check (`playwright-cli open <url>` → a11y snapshot file link) catches a bad release at upgrade time, not mid-task.
+  3. **Use the fallback ladder on breakage**: self-discovery (`playwright-cli --help`) → CLI → MCP → headed/UI Mode (see §Default tool-selection policy).
+  4. **Pin ONLY where true determinism is required** — CI pipelines, release test suites, or reproducible bug reports. Pin there (project-scoped config or CI file, exact versions), never in the always-on global config. Interactive agent sessions do not need byte-level reproducibility; CI does.
+- `--isolated` is unrelated to versioning — keep it regardless, for profile-lock safety (see §2.2).
+
+</VERSION_MANAGEMENT>
+
 </PART2>
 
 ## Part 3 — Tool playbooks
@@ -114,7 +137,7 @@ Rules that apply to ANY MCP entry:
 <PLAYBOOK_CLI>
 
 ```bash
-npm install -g @playwright/cli@latest        # or pin @playwright/cli@0.1.x
+npm install -g @playwright/cli@latest     # keep current; upgrades via `npm update -g @playwright/cli`
 playwright-cli install --skills              # writes .claude/skills/playwright-cli/ (opencode-discovered)
 playwright-cli open https://example.com --headed   # headless by default; --headed opt-in
 playwright-cli install-browser [--with-deps] # documented flow (auto-downloads on first use otherwise)
@@ -197,7 +220,7 @@ Verified mechanisms used by Stagehand / browser-use / Skyvern / Agent Browser:
 - [ ] `AGENTS.md` present (grep "Browser Automation & AI Browser Tooling") and this doc exists (`docs/browser-automation-efficiency.md`) — Gap Analysis verifies both.
 - [ ] Decide with the user whether Playwright MCP is wanted session-wide; if yes, add per Part 2.2 with `"enabled": false` first, then enable after validating `opencode.json` JSONC parses.
 - [ ] Validate any config edit: strip comments (not `https://`), drop trailing commas, `JSON.parse`.
-- [ ] Pin versions of experimental tools (`@playwright/cli`, `@playwright/mcp`); use `--isolated`.
+- [ ] Keep experimental tools current (`@latest`); record running versions in WORKFLOW_STATE.md after upgrades; smoke-test after any update; use `--isolated`. Pin (freeze) versions ONLY where true reproducibility is required — CI pipelines / release suites / bug reproduction (project-scoped or CI file), never the always-on global config (see §2.6).
 - [ ] Install skills via `npx -y skills add <repo> -a opencode -y` or accept `.claude/skills/` output; verify `SKILL.md` frontmatter.
 - [ ] For real-browser automation: official Playwright Extension only; set `PLAYWRIGHT_MCP_EXTENSION_TOKEN` in `environment`; never loosen opencode `permission`.
 - [ ] Security review before installing third-party automation extensions (Playwriter: review source; broadest permissions).
